@@ -2,27 +2,6 @@
 
 A modern web application for managing your fridge inventory with a Flutter frontend and Node.js backend.
 
-## Project Structure
-
-FridgeAI/
-├── my_first_app/           # Flutter Frontend
-│   ├── lib/
-│   │   ├── pages/         # Screen components (home, login, signup)
-│   │   ├── services/      # API services (auth_service)
-│   │   ├── widgets/       # Reusable widgets (loading_overlay)
-│   │   ├── utils/         # Utility functions
-│   │   └── routes/        # App routing
-│   └── assets/
-│       └── images/        # SVG icons (google, github, facebook, fridge)
-│
-└── my_first_app_backend/  # Node.js Backend
-    ├── src/
-    │   ├── config/        # Database and JWT configuration
-    │   ├── controllers/   # Auth controllers
-    │   ├── middleware/    # Auth middleware
-    │   └── routes/        # API routes
-    └── .env              # Environment variables
-
 ## Quick Start
 
 ### 1. Database Setup
