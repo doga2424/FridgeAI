@@ -38,7 +38,7 @@ class AuthService {
   // Login
   Future<Map<String, dynamic>> login(String email, String password) async {
     try {
-      print('Attempting login with: $email'); // Debug log
+      print('Attempting login with: $email');
       final response = await http.post(
         Uri.parse('$baseUrl/auth/login'),
         headers: {'Content-Type': 'application/json'},
@@ -48,19 +48,20 @@ class AuthService {
         }),
       );
 
-      print('Response status: ${response.statusCode}'); // Debug log
-      print('Response body: ${response.body}'); // Debug log
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        await _saveToken(data['token']);
-        return {'success': true, 'data': data};
+        final token = data['data']['token'] as String;
+        await _saveToken(token);
+        return {'success': true, 'data': data['data']};
       } else {
         final error = json.decode(response.body);
         return {'success': false, 'message': error['message']};
       }
     } catch (e) {
-      print('Login error: $e'); // Debug log
+      print('Login error: $e');
       return {'success': false, 'message': 'Connection error: $e'};
     }
   }
@@ -95,8 +96,14 @@ class AuthService {
 
   // Save token
   Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(tokenKey, token);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(tokenKey, token);
+      print('Token saved successfully: $token');
+    } catch (e) {
+      print('Error saving token: $e');
+      throw e;
+    }
   }
 
   // Get token
