@@ -7,10 +7,14 @@ import 'utils/page_transition.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:my_first_app/widgets/fridge_illustration.dart';
 
 class LoginPage extends StatefulWidget {
   @override
-  _LoginPageState createState() => _LoginPageState();
+  _LoginPageState createState() {
+    print('Creating LoginPage state');
+    return _LoginPageState();
+  }
 }
 
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
@@ -129,16 +133,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final showFridge = screenWidth > 768;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: LoadingOverlay(
         isLoading: _isLoading,
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Row(
             children: [
+              // Left side - Login Form
               Expanded(
                 child: Container(
+                  color: Colors.white,
                   padding: EdgeInsets.all(40.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,163 +178,166 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       
                       SizedBox(height: 40),
                       
-                      // Login Form
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_errorMessage.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 16),
-                                child: Text(
-                                  _errorMessage,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 14,
+                      // Form in a scrollable container
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (_errorMessage.isNotEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.only(bottom: 16),
+                                    child: Text(
+                                      _errorMessage,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
 
-                            // Email Field
-                            Text('Email', style: textTheme.bodyLarge),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                hintText: 'login@gmail.com',
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _email = value!,
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Password Field
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
+                                // Email Field
+                                Text('Email', style: textTheme.bodyLarge),
+                                SizedBox(height: 8),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    hintText: 'login@gmail.com',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onSaved: (value) => _email = value ?? '',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your email';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                SizedBox(height: 20),
+
+                                // Password Field
                                 Text('Password', style: textTheme.bodyLarge),
-                                TextButton(
-                                  onPressed: () {
-                                    // TODO: Implement forgot password
-                                  },
-                                  child: Text(
-                                    'Forgot Password?',
-                                    style: textTheme.bodyMedium,
+                                SizedBox(height: 8),
+                                TextFormField(
+                                  obscureText: _obscurePassword,
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your password',
+                                    border: OutlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                hintText: 'Enter your password',
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                    color: colorScheme.onSurface.withOpacity(0.6),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
+                                  onSaved: (value) => _password = value ?? '',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your password';
+                                    }
+                                    return null;
                                   },
                                 ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _password = value!,
-                            ),
-                            
-                            SizedBox(height: 30),
-                            
-                            // Login Button
-                            ElevatedButton(
-                              onPressed: _handleLogin,
-                              child: Text('LOGIN'),
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Or continue with
-                            Row(
-                              children: [
-                                Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'or continue with',
-                                    style: textTheme.bodyMedium,
+                                SizedBox(height: 40),
+
+                                // Login Button
+                                ElevatedButton(
+                                  onPressed: _handleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFF10B981),
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
                                   ),
-                                ),
-                                Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
-                              ],
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Social Login Buttons
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _socialLoginButton(
-                                  'assets/images/google.svg',
-                                  () => _handleSocialLogin('google'),
-                                ),
-                                SizedBox(width: 20),
-                                _socialLoginButton(
-                                  'assets/images/github.svg',
-                                  () => _handleSocialLogin('github'),
-                                ),
-                                SizedBox(width: 20),
-                                _socialLoginButton(
-                                  'assets/images/facebook.svg',
-                                  () => _handleSocialLogin('facebook'),
-                                ),
-                              ],
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Sign up link
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  "Don't have an account yet? ",
-                                  style: textTheme.bodyMedium,
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      SmoothPageTransition(SignupPage()),
-                                    );
-                                  },
                                   child: Text(
-                                    'Sign up for free',
+                                    'LOGIN',
                                     style: TextStyle(
-                                      color: colorScheme.primary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
+                                SizedBox(height: 20),
+
+                                // Or continue with
+                                Row(
+                                  children: [
+                                    Expanded(child: Divider()),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 16),
+                                      child: Text('or continue with'),
+                                    ),
+                                    Expanded(child: Divider()),
+                                  ],
+                                ),
+                                SizedBox(height: 20),
+
+                                // Social Login Buttons
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _socialLoginButton(
+                                      'assets/images/google.svg',
+                                      () => _handleSocialLogin('google'),
+                                    ),
+                                    SizedBox(width: 20),
+                                    _socialLoginButton(
+                                      'assets/images/github.svg',
+                                      () => _handleSocialLogin('github'),
+                                    ),
+                                    SizedBox(width: 20),
+                                    _socialLoginButton(
+                                      'assets/images/facebook.svg',
+                                      () => _handleSocialLogin('facebook'),
+                                    ),
+                                  ],
+                                ),
                               ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Sign up link at the bottom
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Don't have an account yet? ",
+                              style: textTheme.bodyMedium,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation, secondaryAnimation) => SignupPage(),
+                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: Duration(milliseconds: 500),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Sign up for free',
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -336,22 +348,15 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
               ),
               
               // Right side - Illustration
-              Expanded(
-                child: Hero(
-                  tag: 'illustration',
-                  child: Container(
-                    color: colorScheme.surface,
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'assets/images/fridge.svg',
-                        width: 400,
-                        height: 400,
-                        fit: BoxFit.contain,
-                      ),
+              if (showFridge)
+                Expanded(
+                  child: Center(
+                    child: FridgeIllustration(
+                      screenWidth: screenWidth,
+                      timestamp: DateTime.now(),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
