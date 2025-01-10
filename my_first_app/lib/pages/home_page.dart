@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:my_first_app/providers/theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -10,6 +12,37 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final _authService = AuthService();
   int _selectedIndex = 0;
+  bool _isDarkMode = false;
+
+  void _toggleTheme() {
+    setState(() {
+      _isDarkMode = !_isDarkMode;
+    });
+  }
+
+  IconData _getThemeIcon(BuildContext context) {
+    final themeMode = Provider.of<ThemeProvider>(context).themeMode;
+    switch (themeMode) {
+      case ThemeMode.system:
+        return Icons.brightness_auto;
+      case ThemeMode.light:
+        return Icons.light_mode;
+      case ThemeMode.dark:
+        return Icons.dark_mode;
+    }
+  }
+
+  String _getThemeTooltip(BuildContext context) {
+    final themeMode = Provider.of<ThemeProvider>(context).themeMode;
+    switch (themeMode) {
+      case ThemeMode.system:
+        return 'Use Device Theme';
+      case ThemeMode.light:
+        return 'Switch to Dark Mode';
+      case ThemeMode.dark:
+        return 'Switch to System Theme';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,6 +53,13 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: Text('My Fridge'),
         actions: [
+          IconButton(
+            icon: Icon(_getThemeIcon(context)),
+            onPressed: () {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+            },
+            tooltip: _getThemeTooltip(context),
+          ),
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
