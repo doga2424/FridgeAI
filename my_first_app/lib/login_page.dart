@@ -4,6 +4,9 @@ import 'package:my_first_app/services/auth_service.dart';
 import 'package:my_first_app/widgets/loading_overlay.dart';
 import 'signup_page.dart';
 import 'utils/page_transition.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   @override
@@ -60,19 +63,33 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
     _formKey.currentState!.save();
 
     try {
-      final result = await _authService.login(_email, _password);
-      
-      if (result['success']) {
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/api/auth/login'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode({
+          'email': _email.trim(),
+          'password': _password.trim(),
+        }),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        // Login successful
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
+        // Login failed
         setState(() {
-          _errorMessage = result['message'] ?? 'Login failed';
+          _errorMessage = responseData['message'] ?? 'Login failed';
         });
       }
     } catch (e) {
       setState(() {
-        _errorMessage = 'Connection error. Please check if the server is running.';
+        _errorMessage = 'Connection error. Please try again.';
       });
+      print('Login error: $e'); // For debugging
     } finally {
       setState(() {
         _isLoading = false;

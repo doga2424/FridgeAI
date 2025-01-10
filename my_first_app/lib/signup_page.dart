@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/services/auth_service.dart';
 import 'package:my_first_app/widgets/loading_overlay.dart';
+import 'package:http/http.dart' as http;
 import 'login_page.dart';
 import 'utils/page_transition.dart';
+import 'dart:convert';
+import 'dart:io';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -59,18 +62,47 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
     _formKey.currentState!.save();
 
     try {
-      final result = await _authService.signUp(_name, _email, _password);
-      
-      if (result['success']) {
-        Navigator.of(context).pushReplacementNamed('/home');
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/api/auth/signup'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'fullName': _name.trim(),
+          'email': _email.trim(),
+          'password': _password.trim(),
+        }),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        try {
+          final responseData = json.decode(response.body);
+          if (responseData['success'] == true) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          } else {
+            setState(() {
+              _errorMessage = responseData['message'] ?? 'Signup failed';
+            });
+          }
+        } catch (e) {
+          print('JSON decode error: $e');
+          setState(() {
+            _errorMessage = 'Invalid server response';
+          });
+        }
       } else {
         setState(() {
-          _errorMessage = result['message'] ?? 'Signup failed';
+          _errorMessage = 'Server error: ${response.statusCode}';
         });
       }
     } catch (e) {
+      print('Error details: $e');
       setState(() {
-        _errorMessage = 'Connection error. Please try again.';
+        _errorMessage = 'Connection error. Please check if the server is running.';
       });
     } finally {
       setState(() {
