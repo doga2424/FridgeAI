@@ -22,16 +22,21 @@ class AuthService {
         }),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
-        await _saveToken(data['token']);
+        final token = data['token'] as String;
+        await _saveToken(token);
         return {'success': true, 'data': data};
       } else {
         final error = json.decode(response.body);
         return {'success': false, 'message': error['message']};
       }
     } catch (e) {
-      return {'success': false, 'message': 'Connection error'};
+      print('Signup error: $e');
+      return {'success': false, 'message': 'Connection error: $e'};
     }
   }
 
