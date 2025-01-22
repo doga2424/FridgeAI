@@ -27,6 +27,10 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  // Add these focus nodes
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +52,8 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -227,6 +233,69 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                                 ),
                                 SizedBox(height: 20),
 
+                            // Full Name Field
+                            Text('Full Name', style: textTheme.bodyLarge),
+                            SizedBox(height: 8),
+                            TextFormField(
+                              decoration: InputDecoration(
+                                hintText: 'Enter your full name',
+                              ),
+                              onFieldSubmitted: (_) {
+                                FocusScope.of(context).requestFocus(_emailFocusNode);
+                              },
+                              textInputAction: TextInputAction.next,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your name';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) => _name = value!,
+                            ),
+                            
+                            SizedBox(height: 20),
+                            
+                            // Email Field
+                            Text('Email', style: textTheme.bodyLarge),
+                            SizedBox(height: 8),
+                            TextFormField(
+                              focusNode: _emailFocusNode,
+                              decoration: InputDecoration(
+                                hintText: 'Enter your email',
+                              ),
+                              onFieldSubmitted: (_) {
+                                FocusScope.of(context).requestFocus(_passwordFocusNode);
+                              },
+                              textInputAction: TextInputAction.next,
+                              keyboardType: TextInputType.emailAddress,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your email';
+                                }
+                                if (!value.contains('@')) {
+                                  return 'Please enter a valid email';
+                                }
+                                return null;
+                              },
+                              onSaved: (value) => _email = value!,
+                            ),
+                            
+                            SizedBox(height: 20),
+                            
+                            // Password Field
+                            Text('Password', style: textTheme.bodyLarge),
+                            SizedBox(height: 8),
+                            TextFormField(
+                              focusNode: _passwordFocusNode,
+                              obscureText: _obscurePassword,
+                              onFieldSubmitted: (_) => _handleSignup(),
+                              textInputAction: TextInputAction.done,
+                              decoration: InputDecoration(
+                                hintText: 'Create a password',
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    color: colorScheme.onSurface.withOpacity(0.6),
                                 // Email Field
                                 Text('Email', style: textTheme.bodyLarge),
                                 SizedBox(height: 8),
@@ -400,6 +469,8 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
   }
 
   Widget _socialLoginButton(String iconPath, VoidCallback onPressed) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return InkWell(
       onTap: onPressed,
       child: Container(
@@ -414,6 +485,12 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
         ),
         child: SvgPicture.asset(
           iconPath,
+          colorFilter: iconPath.contains('github') 
+              ? ColorFilter.mode(
+                  isDark ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                )
+              : null,
           fit: BoxFit.contain,
         ),
       ),

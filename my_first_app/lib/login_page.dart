@@ -30,6 +30,9 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  // Add this focus node
+  final FocusNode _passwordFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -52,6 +55,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
   @override
   void dispose() {
+    _passwordFocusNode.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -133,6 +137,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final size = MediaQuery.of(context).size;
     final screenWidth = MediaQuery.of(context).size.width;
     final showFridge = screenWidth > 768;
 
@@ -142,6 +147,162 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         isLoading: _isLoading,
         child: FadeTransition(
           opacity: _fadeAnimation,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final isSmallScreen = constraints.maxWidth < 900;
+              final contentWidth = isSmallScreen ? size.width : size.width * 0.4;
+              final padding = isSmallScreen ? 20.0 : 40.0;
+
+              return SingleChildScrollView(
+                child: Container(
+                  height: size.height,
+                  child: isSmallScreen 
+                    ? _buildLoginContent(
+                        context, 
+                        contentWidth, 
+                        padding, 
+                        isSmallScreen,
+                        colorScheme,
+                        textTheme,
+                      )
+                    : Row(
+                        children: [
+                          _buildLoginContent(
+                            context, 
+                            contentWidth, 
+                            padding, 
+                            isSmallScreen,
+                            colorScheme,
+                            textTheme,
+                          ),
+                          Expanded(
+                            child: Hero(
+                              tag: 'illustration',
+                              child: Container(
+                                color: colorScheme.surface,
+                                child: Center(
+                                  child: SvgPicture.asset(
+                                    'assets/images/fridge.svg',
+                                    width: size.width * 0.3,
+                                    height: size.height * 0.5,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginContent(
+    BuildContext context,
+    double contentWidth,
+    double padding,
+    bool isSmallScreen,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    return Container(
+      width: contentWidth,
+      padding: EdgeInsets.all(padding),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Logo
+          Text(
+            'Logo Here',
+            style: textTheme.headlineMedium?.copyWith(
+              color: colorScheme.primary,
+              fontWeight: FontWeight.bold,
+              fontSize: isSmallScreen ? 24 : 32,
+            ),
+          ),
+          SizedBox(height: isSmallScreen ? 15 : 20),
+          
+          // Welcome Text
+          Text(
+            'Welcome back !!!',
+            style: textTheme.bodyMedium?.copyWith(
+              fontSize: isSmallScreen ? 14 : 16,
+            ),
+          ),
+          
+          // Log In Text
+          Text(
+            'Log In',
+            style: textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: isSmallScreen ? 28 : 36,
+            ),
+          ),
+          
+          SizedBox(height: isSmallScreen ? 30 : 40),
+          
+          // Login Form
+          Container(
+            width: contentWidth,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (_errorMessage.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        _errorMessage,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+
+                  // Email Field
+                  Text('Email', style: textTheme.bodyLarge),
+                  SizedBox(height: 8),
+                  TextFormField(
+                    decoration: InputDecoration(
+                      hintText: 'login@gmail.com',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 12 : 16,
+                        vertical: isSmallScreen ? 12 : 16,
+                      ),
+                    ),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 16,
+                    ),
+                    onFieldSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_passwordFocusNode);
+                    },
+                    textInputAction: TextInputAction.next,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _email = value!,
+                  ),
+                  
+                  SizedBox(height: isSmallScreen ? 15 : 20),
+                  
+                  // Password Field
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+=======
           child: Row(
             children: [
               // Left side - Login Form
@@ -152,29 +313,68 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Logo
-                      Text(
-                        'Logo Here',
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                      Text('Password', style: textTheme.bodyLarge),
+                      TextButton(
+                        onPressed: () {
+                          // TODO: Implement forgot password
+                        },
+                        child: Text(
+                          'Forgot Password?',
+                          style: textTheme.bodyMedium,
                         ),
                       ),
-                      SizedBox(height: 20),
-                      
-                      // Welcome Text
-                      Text(
-                        'Welcome back !!!',
-                        style: textTheme.bodyMedium,
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  TextFormField(
+                    focusNode: _passwordFocusNode,
+                    obscureText: _obscurePassword,
+                    onFieldSubmitted: (_) => _handleLogin(),
+                    textInputAction: TextInputAction.done,
+                    decoration: InputDecoration(
+                      hintText: 'Enter your password',
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: isSmallScreen ? 12 : 16,
+                        vertical: isSmallScreen ? 12 : 16,
                       ),
-                      
-                      // Log In Text
-                      Text(
-                        'Log In',
-                        style: textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          color: colorScheme.onSurface.withOpacity(0.6),
                         ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
+                    ),
+                    style: TextStyle(
+                      fontSize: isSmallScreen ? 14 : 16,
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                    onSaved: (value) => _password = value!,
+                  ),
+                  
+                  SizedBox(height: isSmallScreen ? 20 : 30),
+                  
+                  // Login Button
+                  SizedBox(
+                    height: isSmallScreen ? 45 : 50,
+                    child: ElevatedButton(
+                      onPressed: _handleLogin,
+                      child: Text(
+                        'LOGIN',
+                        style: TextStyle(
+                          fontSize: isSmallScreen ? 14 : 16,
                       
                       SizedBox(height: 40),
                       
@@ -342,8 +542,78 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           ],
                         ),
                       ),
+                    ),
+                  ),
+                  
+                  SizedBox(height: 20),
+                  
+                  // Or continue with
+                  Row(
+                    children: [
+                      Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'or continue with',
+                          style: textTheme.bodyMedium,
+                        ),
+                      ),
+                      Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
                     ],
                   ),
+                  
+                  SizedBox(height: 20),
+                  
+                  // Social Login Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _socialLoginButton(
+                        'assets/images/google.svg',
+                        () => _handleSocialLogin('google'),
+                      ),
+                      SizedBox(width: 20),
+                      _socialLoginButton(
+                        'assets/images/github.svg',
+                        () => _handleSocialLogin('github'),
+                      ),
+                      SizedBox(width: 20),
+                      _socialLoginButton(
+                        'assets/images/facebook.svg',
+                        () => _handleSocialLogin('facebook'),
+                      ),
+                    ],
+                  ),
+                  
+                  SizedBox(height: 20),
+                  
+                  // Sign up link
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account yet? ",
+                        style: textTheme.bodyMedium,
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            SmoothPageTransition(SignupPage()),
+                          );
+                        },
+                        child: Text(
+                          'Sign up for free',
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
                 ),
               ),
               
@@ -359,12 +629,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _socialLoginButton(String iconPath, VoidCallback onPressed) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return InkWell(
       onTap: onPressed,
       child: Container(
@@ -379,6 +651,12 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         child: SvgPicture.asset(
           iconPath,
+          colorFilter: iconPath.contains('github') 
+              ? ColorFilter.mode(
+                  isDark ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                )
+              : null,
           fit: BoxFit.contain,
         ),
       ),
