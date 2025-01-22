@@ -20,7 +20,7 @@ class LoadingOverlay extends StatelessWidget {
             color: Colors.black.withOpacity(0.5),
             child: Center(
               child: CircularProgressIndicator(
-                color: Theme.of(context).colorScheme.primary,
+                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF10B981)),
               ),
             ),
           ),

@@ -228,6 +228,7 @@ class MyApp extends StatelessWidget {
             '/home': (context) => HomePage(),
           },
         );
+main
       },
     );
   }
