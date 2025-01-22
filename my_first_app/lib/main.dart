@@ -6,12 +6,22 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'login_page.dart';
+import 'signup_page.dart';
+import 'pages/welcome_screen.dart';
+import 'pages/home_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print('Firebase initialized successfully');
+  } catch (e) {
+    print('Firebase initialization error: $e');
+  }
+  
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -211,7 +221,12 @@ class MyApp extends StatelessWidget {
           ),
           themeMode: themeProvider.themeMode,
           initialRoute: AppRoutes.initialRoute,
-          routes: AppRoutes.routes,
+          routes: {
+            '/login': (context) => LoginPage(),
+            '/signup': (context) => SignupPage(),
+            '/welcome': (context) => WelcomeScreen(),
+            '/home': (context) => HomePage(),
+          },
         );
       },
     );

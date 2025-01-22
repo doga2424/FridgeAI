@@ -67,7 +67,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       final result = await _authService.login(_email, _password);
       
       if (result['success']) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        if (result['data']['isFirstLogin']) {
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Login failed';
@@ -95,7 +99,11 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       final result = await _authService.socialLogin(provider, 'token');
       
       if (result['success']) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        if (result['data']['isFirstLogin']) {
+          Navigator.of(context).pushReplacementNamed('/welcome');
+        } else {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
       } else {
         setState(() {
           _errorMessage = result['message'] ?? 'Social login failed';
@@ -375,8 +383,8 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                       ),
                       SizedBox(width: 20),
                       _socialLoginButton(
-                        'assets/images/github.svg',
-                        () => _handleSocialLogin('github'),
+                        'assets/images/apple.svg',
+                        () => _handleSocialLogin('apple'),
                       ),
                       SizedBox(width: 20),
                       _socialLoginButton(
@@ -438,7 +446,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
         ),
         child: SvgPicture.asset(
           iconPath,
-          colorFilter: iconPath.contains('github') 
+          colorFilter: iconPath.contains('apple') 
               ? ColorFilter.mode(
                   isDark ? Colors.white : Colors.black,
                   BlendMode.srcIn,

@@ -1,0 +1,1 @@
+platform :ios, '13.0'  # Sign in with Apple requires iOS 13 or later 

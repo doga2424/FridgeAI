@@ -296,8 +296,8 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                                 ),
                                 SizedBox(width: 20),
                                 _socialLoginButton(
-                                  'assets/images/github.svg',
-                                  () => _handleSocialSignup('github'),
+                                  'assets/images/apple.svg',
+                                  () => _handleSocialSignup('apple'),
                                 ),
                                 SizedBox(width: 20),
                                 _socialLoginButton(
@@ -382,7 +382,7 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
         ),
         child: SvgPicture.asset(
           iconPath,
-          colorFilter: iconPath.contains('github') 
+          colorFilter: iconPath.contains('apple') 
               ? ColorFilter.mode(
                   isDark ? Colors.white : Colors.black,
                   BlendMode.srcIn,

@@ -32,16 +32,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  String _getThemeTooltip(BuildContext context) {
-    final themeMode = Provider.of<ThemeProvider>(context).themeMode;
-    switch (themeMode) {
-      case ThemeMode.system:
-        return 'Use Device Theme';
-      case ThemeMode.light:
-        return 'Switch to Dark Mode';
-      case ThemeMode.dark:
-        return 'Switch to System Theme';
-    }
+  void _handleCameraPress() {
+    print('Camera button pressed');
   }
 
   @override
@@ -58,7 +50,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
-            tooltip: _getThemeTooltip(context),
+            tooltip: '',
           ),
           IconButton(
             icon: Icon(Icons.logout),
@@ -66,57 +58,92 @@ class _HomePageState extends State<HomePage> {
               await _authService.logout();
               Navigator.of(context).pushReplacementNamed('/login');
             },
+            tooltip: '',
           ),
         ],
       ),
-      body: Row(
-        children: [
-          // Navigation Rail
-          NavigationRail(
-            selectedIndex: _selectedIndex,
-            onDestinationSelected: (int index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
-            labelType: NavigationRailLabelType.selected,
-            destinations: const <NavigationRailDestination>[
-              NavigationRailDestination(
-                icon: Icon(Icons.home_outlined),
-                selectedIcon: Icon(Icons.home),
-                label: Text('Home'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.inventory_2_outlined),
-                selectedIcon: Icon(Icons.inventory_2),
-                label: Text('Inventory'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.shopping_cart_outlined),
-                selectedIcon: Icon(Icons.shopping_cart),
-                label: Text('Shopping List'),
-              ),
-              NavigationRailDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person),
-                label: Text('Profile'),
-              ),
-            ],
+      body: _buildPage(_selectedIndex),
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(
+          tooltipTheme: TooltipThemeData(
+            textStyle: TextStyle(fontSize: 0),
+            height: 0,
+            padding: EdgeInsets.zero,
           ),
-          // Main content
-          Expanded(
-            child: Container(
-              color: colorScheme.surface,
-              child: _buildPage(_selectedIndex),
+        ),
+        child: Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            NavigationBar(
+              height: 65,
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+              destinations: <NavigationDestination>[
+                NavigationDestination(
+                  icon: Icon(Icons.home_outlined, size: 24),
+                  selectedIcon: Icon(Icons.home, size: 24),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.inventory_2_outlined, size: 24),
+                  selectedIcon: Icon(Icons.inventory_2, size: 24),
+                  label: 'Inventory',
+                ),
+                NavigationDestination(
+                  icon: SizedBox(height: 24),
+                  label: '',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.shopping_cart_outlined, size: 24),
+                  selectedIcon: Icon(Icons.shopping_cart, size: 24),
+                  label: 'Shopping List',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.person_outline, size: 24),
+                  selectedIcon: Icon(Icons.person, size: 24),
+                  label: 'Profile',
+                ),
+              ],
+              selectedIndex: _selectedIndex,
+              onDestinationSelected: (int index) {
+                if (index == 2) {
+                  _handleCameraPress();
+                  return;
+                }
+                final adjustedIndex = index > 2 ? index - 1 : index;
+                setState(() {
+                  _selectedIndex = adjustedIndex;
+                });
+              },
             ),
-          ),
-        ],
+            Positioned(
+              top: 8,
+              child: GestureDetector(
+                onTap: _handleCameraPress,
+                child: Container(
+                  height: 44,
+                  width: 44,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primary,
+                  ),
+                  child: Icon(
+                    Icons.camera_alt,
+                    color: colorScheme.onPrimary,
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildPage(int index) {
-    switch (index) {
+    final adjustedIndex = index > 2 ? index - 1 : index;
+    switch (adjustedIndex) {
       case 0:
         return _buildHomePage();
       case 1:
