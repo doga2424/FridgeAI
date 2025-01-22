@@ -7,41 +7,10 @@ enum AgeRange {
   under30('18-29'),
   under45('30-44'),
   under60('45-59'),
-  over60('60>');
+  over60('60+');
 
   final String label;
   const AgeRange(this.label);
-}
-
-enum TastePreference {
-  // Basic Tastes
-  spicy('Spicy 🌶️', Icons.local_fire_department),
-  sweet('Sweet 🍯', Icons.cake),
-  sour('Sour 🍋', Icons.mood_bad),
-  salty('Salty 🧂', Icons.restaurant),
-  bitter('Bitter ☕', Icons.coffee),
-  
-  // Textures
-  crispy('Crispy 🍗', Icons.cookie),
-  creamy('Creamy 🥄', Icons.icecream),
-  crunchy('Crunchy 🥜', Icons.grass),
-  juicy('Juicy 🍎', Icons.water_drop),
-  
-  // Cooking Styles
-  grilled('Grilled 🔥', Icons.outdoor_grill),
-  fried('Fried 🍳', Icons.soup_kitchen),
-  baked('Baked 🥖', Icons.bakery_dining),
-  steamed('Steamed 🥟', Icons.whatshot),
-  
-  // Dietary Preferences
-  healthy('Healthy 🥗', Icons.eco),
-  vegan('Vegan 🌱', Icons.spa),
-  glutenFree('Gluten-Free 🌾', Icons.do_not_disturb),
-  lowCarb('Low-Carb 🥩', Icons.fitness_center);
-
-  final String label;
-  final IconData icon;
-  const TastePreference(this.label, this.icon);
 }
 
 enum Allergy {
@@ -95,6 +64,29 @@ enum BasicTaste {
   const BasicTaste(this.label, this.description);
 }
 
+enum Gender {
+  male('Male 👨', 'For accurate daily calorie needs'),
+  female('Female 👩', 'For accurate daily calorie needs'),
+  other('Other 🧑', 'For accurate daily calorie needs');
+
+  final String label;
+  final String description;
+  const Gender(this.label, this.description);
+}
+
+enum FitnessGoal {
+  weightLoss('Weight Loss 📉', 'Reduce body weight gradually'),
+  weightGain('Weight Gain 📈', 'Build muscle and gain weight'),
+  maintenance('Maintain Weight ⚖️', 'Keep current weight stable'),
+  athletic('Athletic Performance 🏃', 'Optimize for sports/fitness'),
+  healthy('Healthy Living 🥗', 'Focus on overall wellness'),
+  muscle('Build Muscle 💪', 'Increase strength and muscle mass');
+
+  final String label;
+  final String description;
+  const FitnessGoal(this.label, this.description);
+}
+
 class WelcomeScreen extends StatefulWidget {
   @override
   _WelcomeScreenState createState() => _WelcomeScreenState();
@@ -104,10 +96,11 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final PageController _pageController = PageController();
   AgeRange? _selectedAgeRange;
   final Set<Allergy> _selectedAllergies = {};
-  final Set<TastePreference> _selectedTastes = {};
   final Set<DietaryPreference> _selectedDiets = {};
   final Set<BasicTaste> _selectedBasicTastes = {};
   int _currentPage = 0;
+  Gender? _selectedGender;
+  final Set<FitnessGoal> _selectedGoals = {};
 
   @override
   void dispose() {
@@ -141,10 +134,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  // Update the skip button widget to allow skipping the age page
+  // Update the skip button widget
   Widget _buildSkipButton() {
-    // Don't show on welcome and final page
-    if (_currentPage == 0 || _currentPage == 5) {
+    // Don't show on welcome and final page only
+    if (_currentPage == 0 || _currentPage == 7) {
       return SizedBox.shrink();
     }
     
@@ -216,10 +209,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             physics: NeverScrollableScrollPhysics(),
             children: [
               _buildWelcomePage(),
+              _buildGenderPage(),
               _buildAgeInputPage(),
               _buildAllergiesPage(),
               _buildDietaryPage(),
               _buildBasicTastesPage(),
+              _buildGoalsPage(),
               _buildFinalPage(),
             ],
           ),
@@ -269,6 +264,214 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderPage() {
+    return _buildPageContainer(
+      child: Column(
+        children: [
+          _buildPageHeader(
+            'What\'s your gender?',
+            'For accurate daily calorie recommendations'
+          ),
+          SizedBox(height: 32),
+
+          ...Gender.values.map((gender) => Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    _selectedGender = gender;
+                  });
+                  _pageController.nextPage(
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: _selectedGender == gender
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _selectedGender == gender
+                        ? Colors.transparent
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ),
+                    boxShadow: _selectedGender == gender
+                      ? [BoxShadow(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        )]
+                      : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              gender.label,
+                              style: TextStyle(
+                                color: _selectedGender == gender
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.primary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              gender.description,
+                              style: TextStyle(
+                                color: _selectedGender == gender
+                                  ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
+                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _selectedGender == gender
+                          ? Icons.check_circle
+                          : Icons.arrow_forward_ios,
+                        color: _selectedGender == gender
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          )).toList(),
+
+          SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGoalsPage() {
+    return _buildPageContainer(
+      child: Column(
+        children: [
+          _buildPageHeader(
+            'What are your fitness goals?',
+            'Select all that apply'
+          ),
+          SizedBox(height: 32),
+
+          ...FitnessGoal.values.map((goal) => Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  setState(() {
+                    if (_selectedGoals.contains(goal)) {
+                      _selectedGoals.remove(goal);
+                    } else {
+                      _selectedGoals.add(goal);
+                    }
+                  });
+                },
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  decoration: BoxDecoration(
+                    color: _selectedGoals.contains(goal)
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: _selectedGoals.contains(goal)
+                        ? Colors.transparent
+                        : Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    ),
+                    boxShadow: _selectedGoals.contains(goal)
+                      ? [BoxShadow(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        )]
+                      : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              goal.label,
+                              style: TextStyle(
+                                color: _selectedGoals.contains(goal)
+                                  ? Theme.of(context).colorScheme.onPrimary
+                                  : Theme.of(context).colorScheme.primary,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              goal.description,
+                              style: TextStyle(
+                                color: _selectedGoals.contains(goal)
+                                  ? Theme.of(context).colorScheme.onPrimary.withOpacity(0.7)
+                                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        _selectedGoals.contains(goal)
+                          ? Icons.check_circle
+                          : Icons.add_circle_outline,
+                        color: _selectedGoals.contains(goal)
+                          ? Theme.of(context).colorScheme.onPrimary
+                          : Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          )).toList(),
+
+          SizedBox(height: 32),
+
+          ElevatedButton(
+            onPressed: () {
+              _pageController.nextPage(
+                duration: Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: Text('Continue'),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+              minimumSize: Size(200, 50),
+            ),
+          ),
+
+          SizedBox(height: 24),
         ],
       ),
     );
