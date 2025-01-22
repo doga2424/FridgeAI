@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/services/auth_service.dart';
 import 'package:my_first_app/widgets/loading_overlay.dart';
+import 'package:http/http.dart' as http;
 import 'login_page.dart';
 import 'utils/page_transition.dart';
+import 'dart:convert';
+import 'dart:io';
+import 'package:my_first_app/widgets/fridge_illustration.dart';
 
 class SignupPage extends StatefulWidget {
   @override
@@ -65,18 +69,47 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
     _formKey.currentState!.save();
 
     try {
-      final result = await _authService.signUp(_name, _email, _password);
-      
-      if (result['success']) {
-        Navigator.of(context).pushReplacementNamed('/home');
+      final response = await http.post(
+        Uri.parse('http://localhost:3000/api/auth/signup'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: json.encode({
+          'fullName': _name.trim(),
+          'email': _email.trim(),
+          'password': _password.trim(),
+        }),
+      );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
+      if (response.statusCode == 201) {
+        try {
+          final responseData = json.decode(response.body);
+          if (responseData['success'] == true) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          } else {
+            setState(() {
+              _errorMessage = responseData['message'] ?? 'Signup failed';
+            });
+          }
+        } catch (e) {
+          print('JSON decode error: $e');
+          setState(() {
+            _errorMessage = 'Invalid server response';
+          });
+        }
       } else {
         setState(() {
-          _errorMessage = result['message'] ?? 'Signup failed';
+          _errorMessage = 'Server error: ${response.statusCode}';
         });
       }
     } catch (e) {
+      print('Error details: $e');
       setState(() {
-        _errorMessage = 'Connection error. Please try again.';
+        _errorMessage = 'Connection error. Please check if the server is running.';
       });
     } finally {
       setState(() {
@@ -117,17 +150,21 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final showFridge = screenWidth > 768;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: LoadingOverlay(
         isLoading: _isLoading,
         child: FadeTransition(
           opacity: _fadeAnimation,
           child: Row(
             children: [
-              // Left side - Sign Up Form
+              // Left side - Signup Form
               Expanded(
                 child: Container(
+                  color: Colors.white,
                   padding: EdgeInsets.all(40.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,13 +179,13 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                       ),
                       SizedBox(height: 20),
                       
-                      // Welcome Text
+                      // Get Started Text
                       Text(
                         'Get Started!',
                         style: textTheme.bodyMedium,
                       ),
                       
-                      // Sign Up Text
+                      // Create Account Text
                       Text(
                         'Create Account',
                         style: textTheme.headlineLarge?.copyWith(
@@ -158,23 +195,43 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                       
                       SizedBox(height: 40),
                       
-                      // Sign Up Form
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_errorMessage.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 16),
-                                child: Text(
-                                  _errorMessage,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 14,
+                      // Form in a scrollable container
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (_errorMessage.isNotEmpty)
+                                  Padding(
+                                    padding: EdgeInsets.only(bottom: 16),
+                                    child: Text(
+                                      _errorMessage,
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 14,
+                                      ),
+                                    ),
                                   ),
+
+                                // Full Name Field
+                                Text('Full Name', style: textTheme.bodyLarge),
+                                SizedBox(height: 8),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your full name',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onSaved: (value) => _name = value ?? '',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your name';
+                                    }
+                                    return null;
+                                  },
                                 ),
-                              ),
+                                SizedBox(height: 20),
 
                             // Full Name Field
                             Text('Full Name', style: textTheme.bodyLarge),
@@ -239,99 +296,152 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_off : Icons.visibility,
                                     color: colorScheme.onSurface.withOpacity(0.6),
+                                // Email Field
+                                Text('Email', style: textTheme.bodyLarge),
+                                SizedBox(height: 8),
+                                TextFormField(
+                                  decoration: InputDecoration(
+                                    hintText: 'Enter your email',
+                                    border: OutlineInputBorder(),
                                   ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
+                                  onSaved: (value) => _email = value ?? '',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your email';
+                                    }
+                                    if (!value.contains('@')) {
+                                      return 'Please enter a valid email';
+                                    }
+                                    return null;
                                   },
                                 ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _password = value!,
-                            ),
-                            
-                            SizedBox(height: 30),
-                            
-                            // Sign Up Button
-                            ElevatedButton(
-                              onPressed: _handleSignup,
-                              child: Text('SIGN UP'),
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Or continue with
-                            Row(
-                              children: [
-                                Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'or continue with',
-                                    style: textTheme.bodyMedium,
+                                SizedBox(height: 20),
+
+                                // Password Field
+                                Text('Password', style: textTheme.bodyLarge),
+                                SizedBox(height: 8),
+                                TextFormField(
+                                  obscureText: _obscurePassword,
+                                  decoration: InputDecoration(
+                                    hintText: 'Create a password',
+                                    border: OutlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                ),
-                                Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
-                              ],
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Social Login Buttons
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _socialLoginButton(
-                                  'assets/images/google.svg',
-                                  () => _handleSocialSignup('google'),
-                                ),
-                                SizedBox(width: 20),
-                                _socialLoginButton(
-                                  'assets/images/github.svg',
-                                  () => _handleSocialSignup('github'),
-                                ),
-                                SizedBox(width: 20),
-                                _socialLoginButton(
-                                  'assets/images/facebook.svg',
-                                  () => _handleSocialSignup('facebook'),
-                                ),
-                              ],
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Login link
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Already have an account? ',
-                                  style: textTheme.bodyMedium,
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      SmoothPageTransition(LoginPage()),
-                                    );
+                                  onSaved: (value) => _password = value ?? '',
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter a password';
+                                    }
+                                    if (value.length < 6) {
+                                      return 'Password must be at least 6 characters';
+                                    }
+                                    return null;
                                   },
+                                ),
+                                SizedBox(height: 40),
+
+                                // Sign Up Button
+                                ElevatedButton(
+                                  onPressed: _handleSignup,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Color(0xFF10B981),
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
                                   child: Text(
-                                    'Login here',
+                                    'SIGN UP',
                                     style: TextStyle(
-                                      color: colorScheme.primary,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
+                                SizedBox(height: 20),
+
+                                // Or continue with
+                                Row(
+                                  children: [
+                                    Expanded(child: Divider()),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(horizontal: 16),
+                                      child: Text('or continue with'),
+                                    ),
+                                    Expanded(child: Divider()),
+                                  ],
+                                ),
+                                SizedBox(height: 20),
+
+                                // Social Login Buttons
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _socialLoginButton(
+                                      'assets/images/google.svg',
+                                      () => _handleSocialSignup('google'),
+                                    ),
+                                    SizedBox(width: 20),
+                                    _socialLoginButton(
+                                      'assets/images/github.svg',
+                                      () => _handleSocialSignup('github'),
+                                    ),
+                                    SizedBox(width: 20),
+                                    _socialLoginButton(
+                                      'assets/images/facebook.svg',
+                                      () => _handleSocialSignup('facebook'),
+                                    ),
+                                  ],
+                                ),
                               ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Login link at the bottom
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Already have an account? ',
+                              style: textTheme.bodyMedium,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushReplacement(
+                                  context,
+                                  PageRouteBuilder(
+                                    pageBuilder: (context, animation, secondaryAnimation) => LoginPage(),
+                                    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: child,
+                                      );
+                                    },
+                                    transitionDuration: Duration(milliseconds: 500),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Login here',
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -342,22 +452,15 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
               ),
               
               // Right side - Illustration
-              Expanded(
-                child: Hero(
-                  tag: 'illustration',
-                  child: Container(
-                    color: colorScheme.surface,
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'assets/images/fridge.svg',
-                        width: 400,
-                        height: 400,
-                        fit: BoxFit.contain,
-                      ),
+              if (showFridge)
+                Expanded(
+                  child: Center(
+                    child: FridgeIllustration(
+                      screenWidth: screenWidth,
+                      timestamp: DateTime.now(),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
