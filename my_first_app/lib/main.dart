@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:my_first_app/routes/app_routes.dart';
 import 'package:my_first_app/providers/theme_provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(
     ChangeNotifierProvider(
       create: (_) => ThemeProvider(),
@@ -17,9 +25,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        return MaterialApp(
-          title: 'My First App',
-          theme: ThemeData(
+    return MaterialApp(
+      title: 'My First App',
+      theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.light(
               primary: Color(0xFF4CAF50),
@@ -92,10 +100,10 @@ class MyApp extends StatelessWidget {
               color: Color(0xFFF1F1F1),
               elevation: 2,
             ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                textStyle: TextStyle(fontSize: 18),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+            textStyle: TextStyle(fontSize: 18),
                 backgroundColor: Color(0xFF4CAF50),
                 foregroundColor: Colors.white,
               ),

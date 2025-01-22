@@ -23,6 +23,10 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
+  // Add these focus nodes
+  final FocusNode _emailFocusNode = FocusNode();
+  final FocusNode _passwordFocusNode = FocusNode();
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +48,8 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
 
   @override
   void dispose() {
+    _emailFocusNode.dispose();
+    _passwordFocusNode.dispose();
     _fadeController.dispose();
     super.dispose();
   }
@@ -177,6 +183,10 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                               decoration: InputDecoration(
                                 hintText: 'Enter your full name',
                               ),
+                              onFieldSubmitted: (_) {
+                                FocusScope.of(context).requestFocus(_emailFocusNode);
+                              },
+                              textInputAction: TextInputAction.next,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
                                   return 'Please enter your name';
@@ -192,9 +202,14 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                             Text('Email', style: textTheme.bodyLarge),
                             SizedBox(height: 8),
                             TextFormField(
+                              focusNode: _emailFocusNode,
                               decoration: InputDecoration(
                                 hintText: 'Enter your email',
                               ),
+                              onFieldSubmitted: (_) {
+                                FocusScope.of(context).requestFocus(_passwordFocusNode);
+                              },
+                              textInputAction: TextInputAction.next,
                               keyboardType: TextInputType.emailAddress,
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -214,7 +229,10 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                             Text('Password', style: textTheme.bodyLarge),
                             SizedBox(height: 8),
                             TextFormField(
+                              focusNode: _passwordFocusNode,
                               obscureText: _obscurePassword,
+                              onFieldSubmitted: (_) => _handleSignup(),
+                              textInputAction: TextInputAction.done,
                               decoration: InputDecoration(
                                 hintText: 'Create a password',
                                 suffixIcon: IconButton(
@@ -348,6 +366,8 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
   }
 
   Widget _socialLoginButton(String iconPath, VoidCallback onPressed) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return InkWell(
       onTap: onPressed,
       child: Container(
@@ -362,6 +382,12 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
         ),
         child: SvgPicture.asset(
           iconPath,
+          colorFilter: iconPath.contains('github') 
+              ? ColorFilter.mode(
+                  isDark ? Colors.white : Colors.black,
+                  BlendMode.srcIn,
+                )
+              : null,
           fit: BoxFit.contain,
         ),
       ),

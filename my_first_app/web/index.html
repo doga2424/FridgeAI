@@ -21,7 +21,7 @@
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="my_first_app">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
@@ -31,6 +31,24 @@
 
   <title>my_first_app</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: 'AIzaSyB9ZuC5C11gqr_itXayW3uUXW2VKNaY69o',
+      authDomain: 'fridgeai-9fa1f.firebaseapp.com',
+      projectId: 'fridgeai-9fa1f',
+      storageBucket: 'fridgeai-9fa1f.firebasestorage.app',
+      messagingSenderId: '200941976223',
+      appId: '1:200941976223:web:6c09de56ac5c19ef0c40aa',
+      measurementId: 'G-BSDHJMTG4E'
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

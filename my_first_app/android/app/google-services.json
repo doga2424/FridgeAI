@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "200941976223",
+    "project_id": "fridgeai-9fa1f",
+    "storage_bucket": "fridgeai-9fa1f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200941976223:android:1375381883bee6b00c40aa",
+        "android_client_info": {
+          "package_name": "com.example.my_first_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB4EER7gh7J5G51UdRCMagH-km7rDMBIYM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
