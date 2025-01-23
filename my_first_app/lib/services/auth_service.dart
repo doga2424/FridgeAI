@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 // TODO: Uncomment when package is fixed
 // import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:my_first_app/models/user_preferences.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -202,5 +205,78 @@ class AuthService {
       }
     }
     return 'An error occurred';
+  }
+
+  Future<void> saveUserPreferences(UserPreferences preferences) async {
+    try {
+      final user = _auth.currentUser;
+      
+      if (user == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Create user preferences document
+      final userPrefsData = {
+        'userId': user.uid,
+        'email': user.email,
+        'preferences': {
+          'gender': preferences.gender,
+          'ageRange': preferences.ageRange,
+          'allergies': preferences.allergies,
+          'dietaryPreferences': preferences.dietaryPreferences,
+          'basicTastes': preferences.basicTastes,
+          'fitnessGoals': preferences.fitnessGoals,
+        },
+        'lastUpdated': FieldValue.serverTimestamp(),
+      };
+
+      // Check if user document exists
+      final userDoc = await _db.collection('users').doc(user.uid).get();
+      
+      if (userDoc.exists) {
+        // Update existing document
+        await _db.collection('users').doc(user.uid).update(userPrefsData);
+        print('Updated preferences for user: ${user.uid}');
+      } else {
+        // Create new document
+        await _db.collection('users').doc(user.uid).set(userPrefsData);
+        print('Created preferences for user: ${user.uid}');
+      }
+
+    } catch (e) {
+      print('Error saving preferences: $e');
+      throw Exception('Failed to save preferences: $e');
+    }
+  }
+
+  // Add method to get user preferences
+  Future<UserPreferences?> getUserPreferences() async {
+    try {
+      final user = _auth.currentUser;
+      
+      if (user == null) {
+        return null;
+      }
+
+      final doc = await _db.collection('users').doc(user.uid).get();
+      
+      if (!doc.exists || !doc.data()!.containsKey('preferences')) {
+        return null;
+      }
+
+      final prefsData = doc.data()!['preferences'] as Map<String, dynamic>;
+      
+      return UserPreferences(
+        gender: prefsData['gender'] ?? '',
+        ageRange: prefsData['ageRange'] ?? '',
+        allergies: List<String>.from(prefsData['allergies'] ?? []),
+        dietaryPreferences: List<String>.from(prefsData['dietaryPreferences'] ?? []),
+        basicTastes: List<String>.from(prefsData['basicTastes'] ?? []),
+        fitnessGoals: List<String>.from(prefsData['fitnessGoals'] ?? []),
+      );
+    } catch (e) {
+      print('Error getting preferences: $e');
+      return null;
+    }
   }
 } 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/services/auth_service.dart';
+import 'package:my_first_app/models/user_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AgeRange {
   under18('<18'),
@@ -101,6 +103,41 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   int _currentPage = 0;
   Gender? _selectedGender;
   final Set<FitnessGoal> _selectedGoals = {};
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExistingPreferences();
+  }
+
+  Future<void> _loadExistingPreferences() async {
+    try {
+      final prefs = await AuthService().getUserPreferences();
+      if (prefs != null) {
+        setState(() {
+          _selectedGender = Gender.values.firstWhere(
+            (g) => g.name == prefs.gender,
+            orElse: () => Gender.other,
+          );
+          _selectedAgeRange = AgeRange.values.firstWhere(
+            (a) => a.label == prefs.ageRange,
+            orElse: () => AgeRange.under30,
+          );
+          _selectedAllergies.clear();
+          _selectedAllergies.addAll(
+            prefs.allergies.map((a) => Allergy.values.firstWhere(
+              (allergy) => allergy.name == a,
+              orElse: () => Allergy.values.first,
+            )),
+          );
+          // ... similar for other preferences
+        });
+      }
+    } catch (e) {
+      print('Error loading preferences: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -1068,16 +1105,56 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 48),
-          ElevatedButton(
-            onPressed: () async {
-              await AuthService().completeFirstLogin();
-              Navigator.of(context).pushReplacementNamed('/home');
-            },
-            child: Text('Start Using FridgeAI'),
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+          if (_isLoading)
+            CircularProgressIndicator()
+          else
+            ElevatedButton(
+              onPressed: () async {
+                try {
+                  setState(() => _isLoading = true);
+
+                  // Create preferences object
+                  final preferences = UserPreferences(
+                    gender: _selectedGender?.name ?? '',
+                    ageRange: _selectedAgeRange?.label ?? '',
+                    allergies: _selectedAllergies.map((a) => a.name).toList(),
+                    dietaryPreferences: _selectedDiets.map((d) => d.name).toList(),
+                    basicTastes: _selectedBasicTastes.map((t) => t.name).toList(),
+                    fitnessGoals: _selectedGoals.map((g) => g.name).toList(),
+                  );
+
+                  // Save preferences to Firestore
+                  await AuthService().saveUserPreferences(preferences);
+                  print('Preferences saved successfully');
+
+                  // Mark first login as complete
+                  await AuthService().completeFirstLogin();
+                  print('First login completed');
+
+                  // Mark that user has seen welcome screen
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setBool('has_seen_welcome', true);
+                  
+                  // Navigate to login
+                  Navigator.pushReplacementNamed(context, '/login');
+                } catch (e) {
+                  print('Error in final page: $e');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error saving preferences: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                } finally {
+                  setState(() => _isLoading = false);
+                }
+              },
+              child: Text('Start Using FridgeAI'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                minimumSize: Size(200, 50),
+              ),
             ),
-          ),
         ],
       ),
     );

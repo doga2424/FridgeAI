@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:my_first_app/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:my_first_app/providers/theme_provider.dart';
+import 'package:my_first_app/pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -42,7 +43,7 @@ class _HomePageState extends State<HomePage> {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      appBar: AppBar(
+      appBar: _selectedIndex != 3 ? AppBar(
         title: Text('My Fridge'),
         actions: [
           IconButton(
@@ -61,7 +62,7 @@ class _HomePageState extends State<HomePage> {
             tooltip: '',
           ),
         ],
-      ),
+      ) : null,
       body: _buildPage(_selectedIndex),
       bottomNavigationBar: Theme(
         data: Theme.of(context).copyWith(
@@ -69,6 +70,22 @@ class _HomePageState extends State<HomePage> {
             textStyle: TextStyle(fontSize: 0),
             height: 0,
             padding: EdgeInsets.zero,
+          ),
+          navigationBarTheme: NavigationBarThemeData(
+            indicatorColor: Colors.transparent,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            labelTextStyle: MaterialStateProperty.resolveWith((states) {
+              if (states.contains(MaterialState.selected)) {
+                return TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontSize: 12,
+                );
+              }
+              return TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontSize: 12,
+              );
+            }),
           ),
         ),
         child: Stack(
@@ -78,46 +95,217 @@ class _HomePageState extends State<HomePage> {
               height: 65,
               backgroundColor: Theme.of(context).colorScheme.surface,
               labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-              destinations: <NavigationDestination>[
+              selectedIndex: _selectedIndex >= 2 ? _selectedIndex + 1 : _selectedIndex,
+              destinations: [
                 NavigationDestination(
-                  icon: Icon(Icons.home_outlined, size: 24),
-                  selectedIcon: Icon(Icons.home, size: 24),
-                  label: 'Home',
+                  icon: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    margin: EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedIndex == 0 
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                        : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 2,
+                          width: 24,
+                          decoration: BoxDecoration(
+                            color: _selectedIndex == 0 
+                              ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
+                              : Colors.transparent,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Icon(
+                          Icons.home_outlined,
+                          size: 24,
+                          color: _selectedIndex == 0 
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Home',
+                          style: TextStyle(
+                            color: _selectedIndex == 0
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  label: '',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.inventory_2_outlined, size: 24),
-                  selectedIcon: Icon(Icons.inventory_2, size: 24),
-                  label: 'Inventory',
+                  icon: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    margin: EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedIndex == 1 
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                        : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 2,
+                          width: 24,
+                          decoration: BoxDecoration(
+                            color: _selectedIndex == 1 
+                              ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
+                              : Colors.transparent,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 24,
+                          color: _selectedIndex == 1 
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Inventory',
+                          style: TextStyle(
+                            color: _selectedIndex == 1
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  label: '',
                 ),
                 NavigationDestination(
                   icon: SizedBox(height: 24),
                   label: '',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.shopping_cart_outlined, size: 24),
-                  selectedIcon: Icon(Icons.shopping_cart, size: 24),
-                  label: 'Shopping List',
+                  icon: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    margin: EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedIndex == 2 
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                        : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 2,
+                          width: 24,
+                          decoration: BoxDecoration(
+                            color: _selectedIndex == 2 
+                              ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
+                              : Colors.transparent,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Icon(
+                          Icons.shopping_cart_outlined,
+                          size: 24,
+                          color: _selectedIndex == 2 
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Shopping',
+                          style: TextStyle(
+                            color: _selectedIndex == 2
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  label: '',
                 ),
                 NavigationDestination(
-                  icon: Icon(Icons.person_outline, size: 24),
-                  selectedIcon: Icon(Icons.person, size: 24),
-                  label: 'Profile',
+                  icon: AnimatedContainer(
+                    duration: Duration(milliseconds: 200),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    margin: EdgeInsets.only(top: 8),
+                    decoration: BoxDecoration(
+                      color: _selectedIndex == 3 
+                        ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                        : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 2,
+                          width: 24,
+                          decoration: BoxDecoration(
+                            color: _selectedIndex == 3 
+                              ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
+                              : Colors.transparent,
+                            borderRadius: BorderRadius.circular(1),
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Icon(
+                          Icons.person_outline,
+                          size: 24,
+                          color: _selectedIndex == 3 
+                            ? Theme.of(context).colorScheme.primary
+                            : null,
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Profile',
+                          style: TextStyle(
+                            color: _selectedIndex == 3
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurface,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  label: '',
                 ),
               ],
-              selectedIndex: _selectedIndex,
               onDestinationSelected: (int index) {
                 if (index == 2) {
                   _handleCameraPress();
                   return;
                 }
-                final adjustedIndex = index > 2 ? index - 1 : index;
                 setState(() {
-                  _selectedIndex = adjustedIndex;
+                  _selectedIndex = index > 2 ? index - 1 : index;
                 });
               },
             ),
             Positioned(
-              top: 8,
+              top: 4,
               child: GestureDetector(
                 onTap: _handleCameraPress,
                 child: Container(
@@ -125,11 +313,19 @@ class _HomePageState extends State<HomePage> {
                   width: 44,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: colorScheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: Icon(
                     Icons.camera_alt,
-                    color: colorScheme.onPrimary,
+                    color: Theme.of(context).colorScheme.onPrimary,
                     size: 24,
                   ),
                 ),
@@ -142,8 +338,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildPage(int index) {
-    final adjustedIndex = index > 2 ? index - 1 : index;
-    switch (adjustedIndex) {
+    switch (_selectedIndex) {
       case 0:
         return _buildHomePage();
       case 1:
@@ -151,7 +346,7 @@ class _HomePageState extends State<HomePage> {
       case 2:
         return _buildShoppingListPage();
       case 3:
-        return _buildProfilePage();
+        return ProfilePage();
       default:
         return _buildHomePage();
     }
@@ -186,12 +381,6 @@ class _HomePageState extends State<HomePage> {
   Widget _buildShoppingListPage() {
     return Center(
       child: Text('Shopping List Page - Coming Soon'),
-    );
-  }
-
-  Widget _buildProfilePage() {
-    return Center(
-      child: Text('Profile Page - Coming Soon'),
     );
   }
 } 

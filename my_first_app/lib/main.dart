@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:my_first_app/routes/app_routes.dart';
 import 'package:my_first_app/providers/theme_provider.dart';
+import 'package:my_first_app/providers/language_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -10,9 +12,14 @@ import 'login_page.dart';
 import 'signup_page.dart';
 import 'pages/welcome_screen.dart';
 import 'pages/home_page.dart';
+import 'l10n/app_localizations.dart';
+import 'l10n/app_localizations_delegate.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -21,23 +28,28 @@ void main() async {
   } catch (e) {
     print('Firebase initialization error: $e');
   }
-  
+
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
+      ],
       child: MyApp(),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
+  final _appLocalizationsDelegate = const AppLocalizationsDelegate();
+
   @override
   Widget build(BuildContext context) {
-    return Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-    return MaterialApp(
-      title: 'My First App',
-      theme: ThemeData(
+    return Consumer2<ThemeProvider, LanguageProvider>(
+      builder: (context, themeProvider, languageProvider, child) {
+        return MaterialApp(
+          title: 'My First App',
+          theme: ThemeData(
             useMaterial3: true,
             colorScheme: ColorScheme.light(
               primary: Color(0xFF4CAF50),
@@ -110,10 +122,10 @@ class MyApp extends StatelessWidget {
               color: Color(0xFFF1F1F1),
               elevation: 2,
             ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-            textStyle: TextStyle(fontSize: 18),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                textStyle: TextStyle(fontSize: 18),
                 backgroundColor: Color(0xFF4CAF50),
                 foregroundColor: Colors.white,
               ),
@@ -222,11 +234,56 @@ class MyApp extends StatelessWidget {
           themeMode: themeProvider.themeMode,
           initialRoute: AppRoutes.initialRoute,
           routes: {
-            '/login': (context) => LoginPage(),
-            '/signup': (context) => SignupPage(),
+            '/': (context) => StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                
+                // Check if user is logged in
+                if (snapshot.hasData) {
+                  return HomePage();
+                }
+                
+                // Check if this is first time launch
+                final prefs = SharedPreferences.getInstance();
+                final hasSeenWelcome = prefs.then((prefs) => prefs.getBool('has_seen_welcome') ?? false);
+                
+                return FutureBuilder<bool>(
+                  future: hasSeenWelcome,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    }
+                    
+                    if (snapshot.hasData && snapshot.data!) {
+                      // Returning user, show login page
+                      return LoginPage();
+                    } else {
+                      // First time user, show welcome screen
+                      return WelcomeScreen();
+                    }
+                  },
+                );
+              },
+            ),
             '/welcome': (context) => WelcomeScreen(),
+            '/login': (context) => LoginPage(),
+            '/register': (context) => SignupPage(),
             '/home': (context) => HomePage(),
           },
+          locale: languageProvider.locale,
+          supportedLocales: [
+            Locale('en', ''), // English
+            Locale('tr', ''), // Turkish
+          ],
+          localizationsDelegates: [
+            _appLocalizationsDelegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
         );
       },
     );

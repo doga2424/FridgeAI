@@ -13,382 +13,318 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _authService = AuthService();
-  bool _isLoading = false;
-  String _errorMessage = '';
-  String _name = '';
-  String _email = '';
-  String _password = '';
-  bool _obscurePassword = true;
-
-  late AnimationController _fadeController;
-  late Animation<double> _fadeAnimation;
-
-  // Add these focus nodes
+  
+  final _fullNameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  
   final FocusNode _emailFocusNode = FocusNode();
   final FocusNode _passwordFocusNode = FocusNode();
+  
+  bool _passwordVisible = false;
+  bool _isLoading = false;
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
     _fadeController = AnimationController(
-      vsync: this,
       duration: Duration(milliseconds: 500),
+      vsync: this,
     );
-    
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeInOut,
-    ));
-
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_fadeController);
     _fadeController.forward();
   }
 
   @override
   void dispose() {
+    _fullNameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     _emailFocusNode.dispose();
     _passwordFocusNode.dispose();
     _fadeController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSignup() async {
+  Future<void> _handleSignUp() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
-
-    _formKey.currentState!.save();
+    
+    setState(() => _isLoading = true);
 
     try {
-      final result = await _authService.signUp(_name, _email, _password);
-      
+      final result = await _authService.signUp(
+        _fullNameController.text,
+        _emailController.text,
+        _passwordController.text,
+      );
+
       if (result['success']) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Account created successfully! Please login.')),
+        );
+        Navigator.of(context).pushReplacementNamed('/login');
       } else {
-        setState(() {
-          _errorMessage = result['message'] ?? 'Signup failed';
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Connection error. Please try again.';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred during signup')),
+      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _handleSocialSignup(String provider) async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-    });
+  Future<void> _handleSocialLogin(String provider) async {
+    setState(() => _isLoading = true);
 
     try {
-      // TODO: Implement social signup
-      final result = await _authService.socialLogin(provider, 'token');
+      final result = await _authService.socialLogin(provider, '');
       
       if (result['success']) {
-        Navigator.of(context).pushReplacementNamed('/home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Account created successfully! Please login.')),
+        );
+        Navigator.of(context).pushReplacementNamed('/login');
       } else {
-        setState(() {
-          _errorMessage = result['message'] ?? 'Social signup failed';
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result['message'])),
+        );
       }
     } catch (e) {
-      setState(() {
-        _errorMessage = 'Connection error. Please try again.';
-      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred during social login')),
+      );
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Scaffold(
-      body: LoadingOverlay(
-        isLoading: _isLoading,
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Row(
-            children: [
-              // Left side - Sign Up Form
-              Expanded(
-                child: Container(
-                  padding: EdgeInsets.all(40.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Logo
-                      Text(
-                        'Logo Here',
-                        style: textTheme.headlineMedium?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      
-                      // Welcome Text
-                      Text(
-                        'Get Started!',
-                        style: textTheme.bodyMedium,
-                      ),
-                      
-                      // Sign Up Text
-                      Text(
-                        'Create Account',
-                        style: textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      
-                      SizedBox(height: 40),
-                      
-                      // Sign Up Form
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_errorMessage.isNotEmpty)
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 16),
-                                child: Text(
-                                  _errorMessage,
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-
-                            // Full Name Field
-                            Text('Full Name', style: textTheme.bodyLarge),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              decoration: InputDecoration(
-                                hintText: 'Enter your full name',
-                              ),
-                              onFieldSubmitted: (_) {
-                                FocusScope.of(context).requestFocus(_emailFocusNode);
-                              },
-                              textInputAction: TextInputAction.next,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your name';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _name = value!,
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Email Field
-                            Text('Email', style: textTheme.bodyLarge),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              focusNode: _emailFocusNode,
-                              decoration: InputDecoration(
-                                hintText: 'Enter your email',
-                              ),
-                              onFieldSubmitted: (_) {
-                                FocusScope.of(context).requestFocus(_passwordFocusNode);
-                              },
-                              textInputAction: TextInputAction.next,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!value.contains('@')) {
-                                  return 'Please enter a valid email';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _email = value!,
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Password Field
-                            Text('Password', style: textTheme.bodyLarge),
-                            SizedBox(height: 8),
-                            TextFormField(
-                              focusNode: _passwordFocusNode,
-                              obscureText: _obscurePassword,
-                              onFieldSubmitted: (_) => _handleSignup(),
-                              textInputAction: TextInputAction.done,
-                              decoration: InputDecoration(
-                                hintText: 'Create a password',
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                                    color: colorScheme.onSurface.withOpacity(0.6),
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) => _password = value!,
-                            ),
-                            
-                            SizedBox(height: 30),
-                            
-                            // Sign Up Button
-                            ElevatedButton(
-                              onPressed: _handleSignup,
-                              child: Text('SIGN UP'),
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Or continue with
-                            Row(
-                              children: [
-                                Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'or continue with',
-                                    style: textTheme.bodyMedium,
-                                  ),
-                                ),
-                                Expanded(child: Divider(color: colorScheme.onSurface.withOpacity(0.2))),
-                              ],
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Social Login Buttons
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                _socialLoginButton(
-                                  'assets/images/google.svg',
-                                  () => _handleSocialSignup('google'),
-                                ),
-                                SizedBox(width: 20),
-                                _socialLoginButton(
-                                  'assets/images/apple.svg',
-                                  () => _handleSocialSignup('apple'),
-                                ),
-                                SizedBox(width: 20),
-                                _socialLoginButton(
-                                  'assets/images/facebook.svg',
-                                  () => _handleSocialSignup('facebook'),
-                                ),
-                              ],
-                            ),
-                            
-                            SizedBox(height: 20),
-                            
-                            // Login link
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Already have an account? ',
-                                  style: textTheme.bodyMedium,
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.pushReplacement(
-                                      context,
-                                      SmoothPageTransition(LoginPage()),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Login here',
-                                    style: TextStyle(
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              
-              // Right side - Illustration
-              Expanded(
-                child: Hero(
-                  tag: 'illustration',
-                  child: Container(
-                    color: colorScheme.surface,
-                    child: Center(
-                      child: SvgPicture.asset(
-                        'assets/images/fridge.svg',
-                        width: 400,
-                        height: 400,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+  Widget _socialLoginButton(String iconPath, VoidCallback onPressed) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: SvgPicture.asset(
+            iconPath,
+            colorFilter: iconPath.contains('apple') 
+                ? ColorFilter.mode(
+                    isDark ? Colors.white : Colors.black,
+                    BlendMode.srcIn,
+                  )
+                : null,
+            width: 24,
+            height: 24,
           ),
         ),
       ),
     );
   }
 
-  Widget _socialLoginButton(String iconPath, VoidCallback onPressed) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return InkWell(
-      onTap: onPressed,
-      child: Container(
-        width: 48,
-        height: 48,
-        padding: EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: LoadingOverlay(
+        isLoading: _isLoading,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(horizontal: 24),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 80),
+                  Text(
+                    'Logo\nHere',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 48),
+                  Text(
+                    'Get Started!',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+                  ),
+                  Text(
+                    'Create Account',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onBackground,
+                    ),
+                  ),
+                  SizedBox(height: 32),
+                  TextFormField(
+                    controller: _fullNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Full Name',
+                      hintText: 'Enter your full name',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
+                    onFieldSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_emailFocusNode);
+                    },
+                    textInputAction: TextInputAction.next,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _emailController,
+                    focusNode: _emailFocusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      hintText: 'Enter your email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: Icon(Icons.email_outlined),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!value.contains('@')) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
+                    onFieldSubmitted: (_) {
+                      FocusScope.of(context).requestFocus(_passwordFocusNode);
+                    },
+                    textInputAction: TextInputAction.next,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    controller: _passwordController,
+                    focusNode: _passwordFocusNode,
+                    obscureText: !_passwordVisible,
+                    decoration: InputDecoration(
+                      labelText: 'Password',
+                      hintText: 'Create password',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      prefixIcon: Icon(Icons.lock_outline),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _passwordVisible = !_passwordVisible;
+                          });
+                        },
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter a password';
+                      }
+                      if (value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                    onFieldSubmitted: (_) => _handleSignUp(),
+                  ),
+                  SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: _handleSignUp,
+                    child: Text(
+                      'SIGN UP',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text('or continue with'),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _socialLoginButton(
+                        'assets/images/google.svg',
+                        () => _handleSocialLogin('google'),
+                      ),
+                      SizedBox(width: 20),
+                      _socialLoginButton(
+                        'assets/images/apple.svg',
+                        () => _handleSocialLogin('apple'),
+                      ),
+                      SizedBox(width: 20),
+                      _socialLoginButton(
+                        'assets/images/facebook.svg',
+                        () => _handleSocialLogin('facebook'),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 32),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Already have an account?'),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pushReplacementNamed('/login');
+                        },
+                        child: Text('Login'),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 24),
+                ],
+              ),
+            ),
           ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: SvgPicture.asset(
-          iconPath,
-          colorFilter: iconPath.contains('apple') 
-              ? ColorFilter.mode(
-                  isDark ? Colors.white : Colors.black,
-                  BlendMode.srcIn,
-                )
-              : null,
-          fit: BoxFit.contain,
         ),
       ),
     );
