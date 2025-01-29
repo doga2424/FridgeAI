@@ -1,0 +1,8 @@
+platform :osx, '11.0'
+
+target 'Runner' do
+  use_frameworks!
+  use_macos_frameworks!
+end
+
+# ... rest of the Podfile content 
