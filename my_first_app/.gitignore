@@ -54,3 +54,17 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+
+# Firebase
+/lib/firebase_options.dart
+
+# IDE files
+*.iml
+.idea/
+.vscode/
+
+# Flutter/Dart specific
+.flutter-plugins
+.flutter-plugins-dependencies
+.dart_tool/
+build/
