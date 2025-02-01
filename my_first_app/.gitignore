@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Add these lines to your .gitignore
+/lib/config/config.dart
+/lib/firebase_options.dart
+*.iml
+.flutter-plugins
+
+# Environment files
+.env
+.env.*
+!.env.example
