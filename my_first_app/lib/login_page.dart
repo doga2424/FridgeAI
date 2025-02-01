@@ -12,7 +12,7 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _authService = AuthService();
+  final AuthService _authService = AuthService();
   bool _isLoading = false;
   String _errorMessage = '';
   String _email = '';
@@ -44,6 +44,13 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
 
     // Start the animation
     _fadeController.forward();
+
+    // Check if user is already signed in
+    if (_authService.currentUser != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/home');
+      });
+    }
   }
 
   @override

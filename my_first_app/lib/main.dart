@@ -17,6 +17,7 @@ import 'l10n/app_localizations_delegate.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:my_first_app/services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,11 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    
+    // Initialize auth persistence
+    final authService = AuthService();
+    await authService.initializeAuth();
+    
     print('Firebase initialized successfully');
   } catch (e) {
     print('Firebase initialization error: $e');

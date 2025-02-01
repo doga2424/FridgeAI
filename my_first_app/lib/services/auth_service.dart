@@ -13,6 +13,57 @@ class AuthService {
   static const String tokenKey = 'auth_token';
   static const String firstLoginKey = 'first_login_completed';
 
+  // Stream to listen to auth state changes
+  Stream<User?> get authStateChanges => _auth.authStateChanges();
+
+  // Initialize persistence
+  Future<void> initializeAuth() async {
+    await _auth.setPersistence(Persistence.LOCAL);
+  }
+
+  // Sign in with email and password
+  Future<UserCredential> signInWithEmail(String email, String password) async {
+    try {
+      final credential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return credential;
+    } catch (e) {
+      print('Sign in error: $e');
+      rethrow;
+    }
+  }
+
+  // Sign up with email and password
+  Future<UserCredential> signUpWithEmail(String email, String password) async {
+    try {
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      
+      // Create user document in Firestore
+      await _db.collection('users').doc(credential.user!.uid).set({
+        'email': email,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      return credential;
+    } catch (e) {
+      print('Sign up error: $e');
+      rethrow;
+    }
+  }
+
+  // Sign out
+  Future<void> signOut() async {
+    await _auth.signOut();
+  }
+
+  // Get current user
+  User? get currentUser => _auth.currentUser;
+
   // Sign up
   Future<Map<String, dynamic>> signUp(String fullName, String email, String password) async {
     try {

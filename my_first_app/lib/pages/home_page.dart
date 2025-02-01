@@ -4,6 +4,7 @@ import 'package:my_first_app/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:my_first_app/providers/theme_provider.dart';
 import 'package:my_first_app/pages/profile_page.dart';
+import 'package:my_first_app/widgets/bottom_nav_bar.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -14,6 +15,14 @@ class _HomePageState extends State<HomePage> {
   final _authService = AuthService();
   int _selectedIndex = 0;
   bool _isDarkMode = false;
+
+  final List<Widget> _pages = [
+    Center(child: Text('Home')),  // Replace with your actual home page
+    Center(child: Text('Inventory')),  // Replace with your inventory page
+    Center(child: Text('Scan')),  // Replace with your scan page
+    Center(child: Text('Shopping')),  // Replace with your shopping page
+    ProfilePage(),  // Your existing profile page
+  ];
 
   void _toggleTheme() {
     setState(() {
@@ -37,300 +46,48 @@ class _HomePageState extends State<HomePage> {
     print('Camera button pressed');
   }
 
+  void _onItemTapped(int index) {
+    if (index == 2) {  // Camera/Scan button
+      // Handle camera functionality
+      return;
+    }
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            // Main content
-            Column(
-              children: [
-                Expanded(
-                  child: _buildPage(_selectedIndex),
-                ),
-              ],
-            ),
-            
-            // Bottom navigation
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: bottomNavigationBar(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget bottomNavigationBar() {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        tooltipTheme: TooltipThemeData(
-          textStyle: TextStyle(fontSize: 0),
-          height: 0,
-          padding: EdgeInsets.zero,
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          indicatorColor: Colors.transparent,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          labelTextStyle: MaterialStateProperty.resolveWith((states) {
-            if (states.contains(MaterialState.selected)) {
-              return TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontSize: 12,
-              );
-            }
-            return TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 12,
-            );
-          }),
-        ),
-      ),
-      child: Stack(
-        alignment: Alignment.bottomCenter,
+      body: Stack(
         children: [
-          NavigationBar(
-            height: 65,
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-            selectedIndex: _selectedIndex >= 2 ? _selectedIndex + 1 : _selectedIndex,
-            destinations: [
-              NavigationDestination(
-                icon: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  margin: EdgeInsets.only(top: 8),
-                  decoration: BoxDecoration(
-                    color: _selectedIndex == 0 
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-                      : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 2,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: _selectedIndex == 0 
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
-                            : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Icon(
-                        Icons.home_outlined,
-                        size: 24,
-                        color: _selectedIndex == 0 
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Home',
-                        style: TextStyle(
-                          color: _selectedIndex == 0
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                label: '',
-              ),
-              NavigationDestination(
-                icon: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  margin: EdgeInsets.only(top: 8),
-                  decoration: BoxDecoration(
-                    color: _selectedIndex == 1 
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-                      : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 2,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: _selectedIndex == 1 
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
-                            : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Icon(
-                        Icons.inventory_2_outlined,
-                        size: 24,
-                        color: _selectedIndex == 1 
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Inventory',
-                        style: TextStyle(
-                          color: _selectedIndex == 1
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                label: '',
-              ),
-              NavigationDestination(
-                icon: SizedBox(height: 24),
-                label: '',
-              ),
-              NavigationDestination(
-                icon: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  margin: EdgeInsets.only(top: 8),
-                  decoration: BoxDecoration(
-                    color: _selectedIndex == 2 
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-                      : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 2,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: _selectedIndex == 2 
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
-                            : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 24,
-                        color: _selectedIndex == 2 
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Shopping',
-                        style: TextStyle(
-                          color: _selectedIndex == 2
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                label: '',
-              ),
-              NavigationDestination(
-                icon: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  margin: EdgeInsets.only(top: 8),
-                  decoration: BoxDecoration(
-                    color: _selectedIndex == 3 
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-                      : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        height: 2,
-                        width: 24,
-                        decoration: BoxDecoration(
-                          color: _selectedIndex == 3 
-                            ? Theme.of(context).colorScheme.primary.withOpacity(0.9)
-                            : Colors.transparent,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Icon(
-                        Icons.person_outline,
-                        size: 24,
-                        color: _selectedIndex == 3 
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Profile',
-                        style: TextStyle(
-                          color: _selectedIndex == 3
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.onSurface,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                label: '',
-              ),
-            ],
-            onDestinationSelected: (int index) {
-              if (index == 2) {
-                _handleCameraPress();
-                return;
-              }
-              setState(() {
-                _selectedIndex = index > 2 ? index - 1 : index;
-              });
-            },
-          ),
+          // Main content
+          _pages[_selectedIndex],
+          
+          // Camera button
           Positioned(
-            top: 4,
-            child: GestureDetector(
-              onTap: _handleCameraPress,
-              child: Container(
-                height: 44,
-                width: 44,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.primary,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.camera_alt,
-                  color: Theme.of(context).colorScheme.onPrimary,
-                  size: 24,
-                ),
+            bottom: 16,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: FloatingActionButton(
+                onPressed: () {
+                  // Handle camera functionality
+                },
+                child: Icon(Icons.camera_alt),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
               ),
+            ),
+          ),
+          
+          // Bottom navigation
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: BottomNavBar(
+              currentIndex: _selectedIndex,
+              onTap: _onItemTapped,
             ),
           ),
         ],
